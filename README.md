@@ -14,7 +14,7 @@ I have tested this only on Windows, but should work on Linux as well.
 
 # Usage:
 
-`gather.py -f <domain_file> -c <Chrome Driver Path> -d <Disallowed Words> -p <Ports to scan>`
+`gather.py -f <domain_file> -c <Chrome Driver Path> -d <Disallowed Words> -p <Ports to scan> -o <Output directory path>`
 
 `-f`  File containing domain names to scan seperated by a newline character.
 
@@ -24,9 +24,12 @@ I have tested this only on Windows, but should work on Linux as well.
 
 `-p`  Ports to scan, default is `80,443`.
 
+`-o`  Output directory to write the report and screenshots to.
+
 Sample use: 
 
-`python gather.py -f "uber-domains.txt" -c "chromedriver.exe" -d uber.com,onelogin -p 80,443,8080`
+`python gather.py -f "uber-domains.txt" -c "chromedriver.exe" -d uber.com,onelogin -p 80,443,8080 -o "C:\Documents\reports"`
+
 
 
 
