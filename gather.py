@@ -33,30 +33,30 @@ def checkURL(potentialUrl, driver, disallowed):
    if( any(ele in html for ele in disallowed) or len(chromeErrorDivs) >0):
        return False
    return len(html)>10
-def assembleHTML(name):
-    urls = open(name+"/"+name+".txt", "r").readlines()
-    outHTML = open(name+"/"+name+".html","w")
+def assembleHTML(name,outputDir):
+    urls = open(outputDir+"/"+name+"/"+name+".txt", "r").readlines()
+    outHTML = open(outputDir+"/"+name+"/"+name+".html","w")
     outHTML.write("<html><center>")
     outText = ""
     i=0
     for url in urls:
-        outText = outText+"<h3><a href='"+url+"' target='_blank'>"+url+"</a></h3><img src='"+os.getcwd()+"/"+name+"/screenshots/"+str(i)+"_screenshot.png'><br>\n"
+        outText = outText+"<h3><a href='"+url+"' target='_blank'>"+url+"</a></h3><img src='"+outputDir+"/"+name+"/screenshots/"+str(i)+"_screenshot.png'><br>\n"
         i+=1
     outHTML.write(outText)
     outHTML.write("</center></html>")
     outHTML.close()
-def gatherScreenshots(driver, urlFile, name, disallowed, ports):
+def gatherScreenshots(driver, urlFile, name, disallowed, ports, outputDir):
     i=0
     total = len(urlFile)
     try:
-       os.mkdir(name)
+       os.mkdir(outputDir+"/"+name)
     except FileExistsError:
        pass
     try:
-       os.mkdir(name+"/screenshots/")
+       os.mkdir(outputDir+"/"+name+"/screenshots/")
     except FileExistsError:
        pass
-    outputFile = open(name+"/"+name+".txt", "w")
+    outputFile = open(outputDir+"/"+name+"/"+name+".txt", "w")
     for url in urlFile:
         url= url.strip()
         try:
@@ -64,19 +64,19 @@ def gatherScreenshots(driver, urlFile, name, disallowed, ports):
                if port == "80":
                    if checkURL("http://"+url.strip(),driver, disallowed):
                        print("http://"+url)
-                       driver.save_screenshot(os.getcwd()+ "/"+ name+"/screenshots/"+str(i)+"_screenshot.png")
+                       driver.save_screenshot(outputDir+ "/"+ name+"/screenshots/"+str(i)+"_screenshot.png")
                        outputFile.write('http://'+url.strip()+"\n")
                        i+=1
                elif port == "443":
                    if checkURL("https://"+url.strip(),driver, disallowed):
                        print("https://"+url)
-                       driver.save_screenshot(os.getcwd()+ "/"+name+"/screenshots/"+str(i)+"_screenshot.png")
+                       driver.save_screenshot(outputDir+ "/"+name+"/screenshots/"+str(i)+"_screenshot.png")
                        outputFile.write('https://'+url.strip()+"\n")
                        i+=1
                else:
                     if checkURL("http://"+url.strip()+":"+port,driver, disallowed):
                        print("http://"+url+":"+port)
-                       driver.save_screenshot(os.getcwd()+ "/"+name+"/screenshots/"+str(i)+"_screenshot.png")
+                       driver.save_screenshot(outputDir+ "/"+name+"/screenshots/"+str(i)+"_screenshot.png")
                        outputFile.write('https://'+url.strip()+":"+port+"\n")
                        i+=1
         except Exception as e:
@@ -93,15 +93,16 @@ def gather(argv):
     verbose = False
     disallowed = []
     ports = ["80","443"]
+    outputDir = os.getcwd()
     
     try:
-        (opts, args) = getopt.getopt(argv, 'h:f:c:d:p:')
+        (opts, args) = getopt.getopt(argv, 'h:f:c:d:p:o:')
     except getopt.GetoptError:
-        print('gather.py -f <url_file> -c <Chrome Driver Path> -d <Disallowed Words> -p <Ports to scan>')
+        print('gather.py -f <url_file> -c <Chrome Driver Path> -d <Disallowed Words> -p <Ports to scan> -o <Output directory path>')
         sys.exit(2)
     for (opt, arg) in opts:
         if opt == '-h':
-            print('gather.py -f <url_file> -c <Chrome Driver Path> -d <Disallowed Words> -p <Ports to scan>')
+            print('gather.py -f <url_file> -c <Chrome Driver Path> -d <Disallowed Words> -p <Ports to scan> -o <Output directory path>')
             sys.exit()
         elif opt in '-f':
             fileName = arg
@@ -120,6 +121,8 @@ def gather(argv):
                 ports.append(port)
         elif opt in '-v':
             verbose = True
+        elif opt in '-o':
+            outputDir = arg
     try:
         urlFile = open(fileName,"r").readlines()
     except:
@@ -129,8 +132,8 @@ def gather(argv):
     driver = webdriver.Chrome(executable_path=chromeDriver,options=options,desired_capabilities=desired_capabilities, service_args=["--headless","--allow-running-insecure-content","--test-type","--ignore-certificate-errors","--ignore-ssl-errors=true", "--ssl-protocol=any"])
     driver.set_page_load_timeout(8)
     
-    gatherScreenshots(driver,urlFile, outDirName, disallowed, ports)
-    assembleHTML(outDirName)
+    gatherScreenshots(driver,urlFile, outDirName, disallowed, ports, outputDir)
+    assembleHTML(outDirName,outputDir)
 if __name__ == '__main__':
     printLogo()
     gather(sys.argv[1:])
